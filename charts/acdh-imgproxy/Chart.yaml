@@ -14,6 +14,9 @@ maintainers:
     url: https://www.oeaw.ac.at/acdh
 annotations:
   artifacthub.io/license: MIT
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial release with the upstream imgproxy chart and an Nginx transformation cache
 dependencies:
   - name: imgproxy
     version: 1.1.0
