@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -19,10 +20,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
           version: v3.20.0
+
+      - name: Add upstream Helm repository
+        run: helm repo add imgproxy https://helm.imgproxy.net/
 
       - name: Build dependencies
         run: helm dependency build charts/acdh-imgproxy

@@ -23,6 +23,9 @@ jobs:
         with:
           version: v3.20.0
 
+      - name: Add upstream Helm repository
+        run: helm repo add imgproxy https://helm.imgproxy.net/
+
       - name: Build dependencies
         run: helm dependency build charts/acdh-imgproxy
 
@@ -31,4 +34,3 @@ jobs:
 
       - name: Render chart
         run: helm template imgproxy charts/acdh-imgproxy --namespace imgproxy
-
