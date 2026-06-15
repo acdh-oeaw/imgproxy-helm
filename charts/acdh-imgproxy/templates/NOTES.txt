@@ -1,0 +1,3 @@
+The imgproxy origin service is {{ include "acdh-imgproxy.originServiceName" . }}.
+The public Ingress routes through {{ include "acdh-imgproxy.cacheName" . }}.
+

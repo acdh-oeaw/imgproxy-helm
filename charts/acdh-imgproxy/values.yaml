@@ -1,0 +1,97 @@
+global: {}
+
+imgproxy:
+  image:
+    tag: v4
+
+  resources:
+    common:
+      labels:
+        ID: "23521"
+
+    addSecrets:
+      - imgproxy-imgproxy-env-filesystem
+
+    # The wrapper chart owns the public Ingress so it can route through Nginx.
+    ingress:
+      enabled: false
+
+  persistence:
+    enabled: true
+    existingClaim: acdh-resources-container
+    mountPath: /images/container
+    accessModes:
+      - ReadOnlyMany
+
+cache:
+  fullnameOverride: imgproxy-cache
+  replicas: 2
+
+  image:
+    repository: nginxinc/nginx-unprivileged
+    digest: sha256:37f356a5eba5d187365b4f59cd6cc29f1f922ad18146d554b576a80983377e6a
+    pullPolicy: IfNotPresent
+
+  config:
+    cacheMaxSize: 4g
+    inactive: 30d
+    keysZoneSize: 20m
+    validNotFound: 1m
+    validSuccess: 30d
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+      ephemeral-storage: 512Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+      ephemeral-storage: 5Gi
+
+  storage:
+    cacheSizeLimit: 5Gi
+    tmpSizeLimit: 64Mi
+
+  service:
+    port: 80
+
+origin:
+  service:
+    # Empty uses "<release-name>-imgproxy", matching the upstream dependency.
+    name: ""
+    port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - imgproxy-test.acdh-ch-dev.oeaw.ac.at
+    - imgproxy.acdh.oeaw.ac.at
+  path: /
+  pathType: ImplementationSpecific
+  tls:
+    secretName: imgproxy-cert
+

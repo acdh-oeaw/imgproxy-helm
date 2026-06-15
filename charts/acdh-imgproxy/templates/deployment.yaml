@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "acdh-imgproxy.cacheName" . }}
+  labels:
+    {{- include "acdh-imgproxy.labels" . | nindent 4 }}
+    app.kubernetes.io/name: imgproxy-cache
+    app.kubernetes.io/component: cache
+spec:
+  replicas: {{ .Values.cache.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cache
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.cache.podSecurityContext | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 14 }}
+      containers:
+        - name: nginx
+          image: "{{ .Values.cache.image.repository }}@{{ .Values.cache.image.digest }}"
+          imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          securityContext:
+            {{- toYaml .Values.cache.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.cache.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "acdh-imgproxy.cacheName" . }}-config
+        - name: cache
+          emptyDir:
+            sizeLimit: {{ .Values.cache.storage.cacheSizeLimit }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.cache.storage.tmpSizeLimit }}
+
