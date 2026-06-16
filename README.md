@@ -11,8 +11,8 @@ helm repo add acdh-imgproxy https://acdh-oeaw.github.io/imgproxy-helm
 helm repo update
 ```
 
-See [the chart documentation](charts/acdh-imgproxy/README.md) for migration, configuration, and
-upgrade instructions.
+See [the chart documentation](charts/acdh-imgproxy/README.md) for architecture, maintenance, and
+deployment upgrade instructions.
 
 ## Development
 
@@ -26,4 +26,3 @@ helm template imgproxy charts/acdh-imgproxy --namespace imgproxy
 
 Merging a chart-version change to `main` creates a GitHub Release and updates the Helm index on the
 `gh-pages` branch. Increment `version` in `charts/acdh-imgproxy/Chart.yaml` for every chart release.
-

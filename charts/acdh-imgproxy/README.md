@@ -10,7 +10,7 @@ Ingress so public traffic reaches Nginx first.
 Upstream changes remain available without copying or merging upstream templates:
 
 1. Change the `imgproxy` dependency version in `Chart.yaml`.
-2. Run `helm dependency update deploy/imgproxy`.
+2. Run `helm dependency update charts/acdh-imgproxy`.
 3. Review `Chart.lock` and the rendered manifests.
 4. Test against the test hostname before upgrading production.
 
@@ -32,114 +32,51 @@ helm lint charts/acdh-imgproxy
 helm template imgproxy charts/acdh-imgproxy --namespace imgproxy
 ```
 
-## One-time migration of the existing release
+## Upgrade the deployed release
 
-The existing release stores upstream values at the root. The wrapper dependency expects those
-values under `imgproxy:`. Some values contain S3 credentials and imgproxy signing keys, so generate
-the migration file outside the repository with restrictive permissions:
+Update the repository metadata and inspect the available chart versions:
 
 ```bash
-umask 077
-
-helm get values imgproxy --namespace imgproxy --output json |
-  jq '{
-    global: (.global // {}),
-    imgproxy: (
-      del(.global)
-      | .resources.ingress.enabled = false
-    )
-  }' > /tmp/imgproxy-wrapper-values.json
+helm repo update
+helm search repo acdh-imgproxy/acdh-imgproxy --versions
 ```
 
-Confirm the file is not empty and is readable only by the current user:
+Run a server-side dry run with the target version:
 
 ```bash
-test -s /tmp/imgproxy-wrapper-values.json
-stat --format='%a %n' /tmp/imgproxy-wrapper-values.json
-```
-
-Render the exact migration:
-
-```bash
-helm template imgproxy charts/acdh-imgproxy \
+helm upgrade imgproxy acdh-imgproxy/acdh-imgproxy \
+  --version <version> \
   --namespace imgproxy \
-  --values /tmp/imgproxy-wrapper-values.json \
-  > /tmp/imgproxy-wrapper-rendered.yaml
-```
-
-Dry-run against the cluster. `--take-ownership` allows the existing manually-created cache
-Deployment and Service to become part of release `imgproxy`:
-
-```bash
-helm upgrade imgproxy charts/acdh-imgproxy \
-  --namespace imgproxy \
-  --values /tmp/imgproxy-wrapper-values.json \
-  --take-ownership \
+  --reset-then-reuse-values \
   --dry-run=server \
+  --hide-secret \
   --debug
 ```
 
-Perform the migration:
+Deploy the version after reviewing the dry-run output:
 
 ```bash
-helm upgrade imgproxy charts/acdh-imgproxy \
+helm upgrade imgproxy acdh-imgproxy/acdh-imgproxy \
+  --version <version> \
   --namespace imgproxy \
-  --values /tmp/imgproxy-wrapper-values.json \
-  --take-ownership \
+  --reset-then-reuse-values \
   --atomic \
   --timeout 10m
 ```
 
-Verify ownership and rollout:
+`--reset-then-reuse-values` starts with the new chart defaults and reapplies the values stored in
+the current release. This preserves deployment-specific settings while allowing new chart defaults
+to take effect.
+
+Verify the release and both Deployments:
 
 ```bash
 helm status imgproxy --namespace imgproxy
 kubectl -n imgproxy rollout status deployment/imgproxy-imgproxy
 kubectl -n imgproxy rollout status deployment/imgproxy-cache
-kubectl -n imgproxy get deployment,service,ingress,configmap
-```
-
-After the Helm-managed cache pods use `imgproxy-cache-config`, remove the obsolete Kustomize
-ConfigMaps from the initial rollout:
-
-```bash
-kubectl -n imgproxy get deployment imgproxy-cache \
-  -o jsonpath='{.spec.template.spec.volumes[0].configMap.name}{"\n"}'
-
-kubectl -n imgproxy delete configmap \
-  imgproxy-cache-config-564gdfg7k5 \
-  imgproxy-cache-config-64k878mdm7 \
-  imgproxy-cache-config-bh5k8hmb4g
-```
-
-After verification, remove the temporary files containing secret values:
-
-```bash
-shred --remove /tmp/imgproxy-wrapper-values.json
-rm -f /tmp/imgproxy-wrapper-rendered.yaml
-```
-
-## Future upgrades
-
-Helm stores the migrated nested values in the release. Preserve them on later upgrades:
-
-```bash
-helm upgrade imgproxy charts/acdh-imgproxy \
-  --namespace imgproxy \
-  --reuse-values \
-  --atomic \
-  --timeout 10m
+kubectl -n imgproxy get pods,service,ingress
 ```
 
 When upgrading through Rancher, verify that the current custom values, especially `imgproxy.env`,
-are retained. A stronger future improvement is moving credentials and signing keys to an externally
-managed Kubernetes Secret and referencing it through `imgproxy.resources.addSecrets`.
-
-## Rollback
-
-Helm can return to the previous release revision:
-
-```bash
-helm history imgproxy --namespace imgproxy
-helm rollback imgproxy <revision> --namespace imgproxy --wait --timeout 10m
-```
+are retained. Credentials and signing keys should eventually move to an externally managed
+Kubernetes Secret referenced through `imgproxy.resources.addSecrets`.
