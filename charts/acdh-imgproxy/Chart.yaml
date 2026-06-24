@@ -2,7 +2,7 @@ apiVersion: v2
 name: acdh-imgproxy
 description: ACDH imgproxy deployment with an Nginx transformation cache
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "4"
 home: https://github.com/acdh-oeaw/imgproxy-helm
 icon: https://cdn.rawgit.com/imgproxy/imgproxy/master/logo.svg
