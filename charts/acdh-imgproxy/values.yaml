@@ -38,6 +38,7 @@ cache:
     keysZoneSize: 20m
     validNotFound: 1m
     validSuccess: 30d
+    otelEndpoint: http://localhost:4317
 
   podSecurityContext:
     runAsNonRoot: true

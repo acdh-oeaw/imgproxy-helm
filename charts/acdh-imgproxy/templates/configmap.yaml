@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: cache
 data:
   default.conf: |
-    {{- $config := .Files.Get "files/nginx.conf" }}
+    {{- $config := .Files.Get "files/default.conf" }}
     {{- $config = replace "__KEYS_ZONE_SIZE__" .Values.cache.config.keysZoneSize $config }}
     {{- $config = replace "__CACHE_MAX_SIZE__" .Values.cache.config.cacheMaxSize $config }}
     {{- $config = replace "__INACTIVE__" .Values.cache.config.inactive $config }}
@@ -17,4 +17,7 @@ data:
     {{- $config = replace "__ORIGIN_PORT__" (.Values.origin.service.port | toString) $config }}
     {{- $config = replace "__VALID_SUCCESS__" .Values.cache.config.validSuccess $config }}
     {{- $config = replace "__VALID_NOT_FOUND__" .Values.cache.config.validNotFound $config }}
+    {{- $config = replace "__OTEL_ENDPOINT__" .Values.cache.config.otelEndpoint $config }}
     {{- $config | nindent 4 }}
+  nginx.conf: |
+    {{- $config := .Files.Get "files/nginx.conf" }}
