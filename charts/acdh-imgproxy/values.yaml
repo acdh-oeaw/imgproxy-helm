@@ -4,6 +4,10 @@ imgproxy:
   image:
     tag: v4
 
+  env:
+    IMGPROXY_DOWNLOAD_TIMEOUT: "30"
+    IMGPROXY_TIMEOUT: "40"
+
   resources:
     common:
       labels:
