@@ -21,3 +21,4 @@ data:
     {{- $config | nindent 4 }}
   nginx.conf: |
     {{- $config := .Files.Get "files/nginx.conf" }}
+    {{- $config | nindent 4 }}
