@@ -5,13 +5,30 @@ imgproxy:
     tag: v4
 
   env:
-    IMGPROXY_DOWNLOAD_TIMEOUT: "30"
-    IMGPROXY_TIMEOUT: "40"
+    IMGPROXY_DOWNLOAD_TIMEOUT: '7'
+    IMGPROXY_TIMEOUT: '9'
+    AWS_ACCESS_KEY_ID: 9XBDV
+    AWS_SECRET_ACCESS_KEY: abcdefG0
+    IMGPROXY_KEY: >-
+      def345
+    IMGPROXY_MAX_ANIMATION_FRAMES: '200'
+    IMGPROXY_MAX_SRC_RESOLUTION: '50'
+    IMGPROXY_OPEN_TELEMETRY_ENABLE: 'true'
+    IMGPROXY_PROMETHEUS_BIND: ':8081'
+    IMGPROXY_S3_ENDPOINT: http://k8s-s3-access.s3.svc:8080
+    IMGPROXY_SALT: >-
+      abc123
+    IMGPROXY_USE_S3: 'true'
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://k8s-otel.otel.svc:4317
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://k8s-otel.otel.svc:4317
+    OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: grpc
+    OTEL_SERVICE_NAME: imgproxy
 
   resources:
     common:
       labels:
-        ID: "23521"
+        ID: "99999"
 
     addSecrets:
       - imgproxy-imgproxy-env-filesystem
@@ -33,7 +50,7 @@ cache:
 
   image:
     repository: nginxinc/nginx-unprivileged
-    digest: sha256:37f356a5eba5d187365b4f59cd6cc29f1f922ad18146d554b576a80983377e6a
+    tag: 1-alpine-otel
     pullPolicy: IfNotPresent
 
   config:
@@ -93,8 +110,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   hosts:
-    - imgproxy-test.acdh-ch-dev.oeaw.ac.at
-    - imgproxy.acdh.oeaw.ac.at
+    - imgproxy.example.org
   path: /
   pathType: ImplementationSpecific
   tls:
