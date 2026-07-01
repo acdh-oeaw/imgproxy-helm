@@ -36,7 +36,7 @@ spec:
               {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 14 }}
       containers:
         - name: nginx
-          image: "{{ .Values.cache.image.repository }}@{{ .Values.cache.image.digest }}"
+          image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
           imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
           ports:
             - name: http
