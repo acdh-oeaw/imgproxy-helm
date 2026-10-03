@@ -88,8 +88,15 @@ cache:
       ephemeral-storage: 5Gi
 
   storage:
+    # Size of each replica's cache: the emptyDir limit, or the volume size when persistent. Keep it above
+    # `config.cacheMaxSize`.
     cacheSizeLimit: 5Gi
     tmpSizeLimit: 64Mi
+    # With `false` the cache lives on an emptyDir and starts empty after every rollout. With `true` the cache runs as
+    # a StatefulSet with one PersistentVolumeClaim per replica, so rendered images survive restarts and upgrades.
+    persistent: false
+    # Empty uses the cluster's default StorageClass.
+    storageClassName: ""
 
   service:
     port: 80

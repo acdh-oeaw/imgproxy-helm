@@ -24,6 +24,17 @@
             }
           }
         },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "persistent": {
+              "type": "boolean"
+            },
+            "storageClassName": {
+              "type": "string"
+            }
+          }
+        },
         "service": {
           "type": "object",
           "required": ["port"],
