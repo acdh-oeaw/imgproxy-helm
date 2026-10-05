@@ -8,6 +8,33 @@ entries:
       artifacthub.io/license: MIT
     apiVersion: v2
     appVersion: "4"
+    created: "2026-10-05T13:40:55.782929399Z"
+    dependencies:
+    - name: imgproxy
+      repository: https://helm.imgproxy.net/
+      version: 1.1.0
+    description: ACDH imgproxy deployment with an Nginx transformation cache
+    digest: d89c7a70d2b495ee280d980c1bcd0c18e42480fc1464537a82460891fccaacd9
+    home: https://github.com/acdh-oeaw/imgproxy-helm
+    icon: https://cdn.rawgit.com/imgproxy/imgproxy/master/logo.svg
+    maintainers:
+    - name: ACDH-CH
+      url: https://www.oeaw.ac.at/acdh
+    name: acdh-imgproxy
+    sources:
+    - https://github.com/acdh-oeaw/imgproxy-helm
+    - https://github.com/imgproxy/imgproxy-helm
+    type: application
+    urls:
+    - https://github.com/acdh-oeaw/imgproxy-helm/releases/download/acdh-imgproxy-0.2.4/acdh-imgproxy-0.2.4.tgz
+    version: 0.2.4
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial release with the upstream imgproxy chart and an Nginx transformation cache
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: "4"
     created: "2026-07-02T19:50:20.481550968Z"
     dependencies:
     - name: imgproxy
@@ -136,4 +163,4 @@ entries:
     urls:
     - https://github.com/acdh-oeaw/imgproxy-helm/releases/download/acdh-imgproxy-0.1.0/acdh-imgproxy-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-02T19:50:20.481571136Z"
+generated: "2026-10-05T13:40:55.782942028Z"
