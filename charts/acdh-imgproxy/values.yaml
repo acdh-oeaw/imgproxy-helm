@@ -109,6 +109,9 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Each cache replica keeps its own cache, so send a given url to the same replica every time instead of making
+    # every replica render it once.
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
   hosts:
     - imgproxy.example.org
   path: /
