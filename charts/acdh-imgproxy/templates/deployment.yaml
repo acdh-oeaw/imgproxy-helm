@@ -1,5 +1,7 @@
+{{- $persistent := .Values.cache.storage.persistent }}
 apiVersion: apps/v1
-kind: Deployment
+{{- /* A Deployment cannot give each replica its own volume, so a persistent cache runs as a StatefulSet. */}}
+kind: {{ ternary "StatefulSet" "Deployment" $persistent }}
 metadata:
   name: {{ include "acdh-imgproxy.cacheName" . }}
   labels:
@@ -8,11 +10,17 @@ metadata:
     app.kubernetes.io/component: cache
 spec:
   replicas: {{ .Values.cache.replicas }}
+  {{- if $persistent }}
+  serviceName: {{ include "acdh-imgproxy.cacheName" . }}
+  updateStrategy:
+    type: RollingUpdate
+  {{- else }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+  {{- end }}
   selector:
     matchLabels:
       {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 6 }}
@@ -83,10 +91,27 @@ spec:
         - name: config
           configMap:
             name: {{ include "acdh-imgproxy.cacheName" . }}-config
+        {{- if not $persistent }}
         - name: cache
           emptyDir:
             sizeLimit: {{ .Values.cache.storage.cacheSizeLimit }}
+        {{- end }}
         - name: tmp
           emptyDir:
             sizeLimit: {{ .Values.cache.storage.tmpSizeLimit }}
-
+  {{- if $persistent }}
+  volumeClaimTemplates:
+    - metadata:
+        name: cache
+        labels:
+          {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- with .Values.cache.storage.storageClassName }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.cache.storage.cacheSizeLimit }}
+  {{- end }}

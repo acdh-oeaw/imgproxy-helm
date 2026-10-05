@@ -73,7 +73,7 @@ Verify the release and both Deployments:
 ```bash
 helm status imgproxy --namespace imgproxy
 kubectl -n imgproxy rollout status deployment/imgproxy-imgproxy
-kubectl -n imgproxy rollout status deployment/imgproxy-cache
+kubectl -n imgproxy rollout status deployment/imgproxy-cache  # statefulset/imgproxy-cache with cache.storage.persistent
 kubectl -n imgproxy get pods,service,ingress
 ```
 
