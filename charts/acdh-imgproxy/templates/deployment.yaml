@@ -12,8 +12,14 @@ spec:
   replicas: {{ .Values.cache.replicas }}
   {{- if $persistent }}
   serviceName: {{ include "acdh-imgproxy.cacheName" . }}
+  {{- /* Replicas are independent caches, so they need not start in order. Immutable once created. */}}
+  podManagementPolicy: Parallel
   updateStrategy:
     type: RollingUpdate
+  {{- /* The volumes only hold a cache, so they go with the StatefulSet or the replica. */}}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
   {{- else }}
   strategy:
     type: RollingUpdate

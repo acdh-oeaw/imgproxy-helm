@@ -68,7 +68,7 @@ helm upgrade imgproxy acdh-imgproxy/acdh-imgproxy \
 the current release. This preserves deployment-specific settings while allowing new chart defaults
 to take effect.
 
-Verify the release and both Deployments:
+Verify the release, the origin and the cache:
 
 ```bash
 helm status imgproxy --namespace imgproxy
@@ -76,6 +76,34 @@ kubectl -n imgproxy rollout status deployment/imgproxy-imgproxy
 kubectl -n imgproxy rollout status deployment/imgproxy-cache  # statefulset/imgproxy-cache with cache.storage.persistent
 kubectl -n imgproxy get pods,service,ingress
 ```
+
+## Persistent cache
+
+By default the cache lives on an `emptyDir` and starts empty after every rollout. With
+`cache.storage.persistent=true` the cache runs as a StatefulSet with one `ReadWriteOnce`
+PersistentVolumeClaim per replica, sized by `cache.storage.cacheSizeLimit`, so rendered images
+survive restarts and upgrades.
+
+- Switching replaces the cache Deployment with a StatefulSet in one upgrade. Helm removes the
+  Deployment without waiting for the StatefulSet, so the cache is unavailable until the first new
+  pod has its volume and is ready. The new volumes start empty once.
+- A StatefulSet replaces its pods one at a time; with 2 replicas, one keeps serving. After a
+  restart, Nginx indexes the existing files in the background, and entries it hasn't indexed yet are
+  fetched again.
+- The volumes are deleted with the StatefulSet (on `helm uninstall` or when switching back) and
+  with a replica when scaling down.
+- A StatefulSet's volume templates can't be updated, so an upgrade that changes
+  `cache.storage.cacheSizeLimit` or `cache.storage.storageClassName` fails. To apply one, delete
+  the StatefulSet but keep its pods, then upgrade:
+
+  ```bash
+  kubectl -n imgproxy delete statefulset imgproxy-cache --cascade=orphan
+  ```
+
+  Existing volumes keep their size and class. Delete each pod and its claim
+  (`cache-imgproxy-cache-<n>`) to recreate them, or expand the claims if the StorageClass allows it.
+
+Run the server-side dry run first to check that the StorageClass exists.
 
 When upgrading through Rancher, verify that the current custom values, especially `imgproxy.env`,
 are retained. Credentials and signing keys should eventually move to an externally managed
