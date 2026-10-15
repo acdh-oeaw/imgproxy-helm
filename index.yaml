@@ -3,6 +3,33 @@ entries:
   acdh-imgproxy:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: Optionally keep the Nginx cache on persistent volumes (`cache.storage.persistent`)
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: "4"
+    created: "2026-10-15T12:52:53.032225331Z"
+    dependencies:
+    - name: imgproxy
+      repository: https://helm.imgproxy.net/
+      version: 1.1.0
+    description: ACDH imgproxy deployment with an Nginx transformation cache
+    digest: ed632d032713eec044f97f7136eb7263e3c79fe942cfd0c26d8089df8bd5bcfc
+    home: https://github.com/acdh-oeaw/imgproxy-helm
+    icon: https://cdn.rawgit.com/imgproxy/imgproxy/master/logo.svg
+    maintainers:
+    - name: ACDH-CH
+      url: https://www.oeaw.ac.at/acdh
+    name: acdh-imgproxy
+    sources:
+    - https://github.com/acdh-oeaw/imgproxy-helm
+    - https://github.com/imgproxy/imgproxy-helm
+    type: application
+    urls:
+    - https://github.com/acdh-oeaw/imgproxy-helm/releases/download/acdh-imgproxy-0.3.0/acdh-imgproxy-0.3.0.tgz
+    version: 0.3.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: Align the Nginx cache key with WebP-only automatic format negotiation
       artifacthub.io/license: MIT
@@ -190,4 +217,4 @@ entries:
     urls:
     - https://github.com/acdh-oeaw/imgproxy-helm/releases/download/acdh-imgproxy-0.1.0/acdh-imgproxy-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-07T11:55:07.697518677Z"
+generated: "2026-10-15T12:52:53.032252921Z"
