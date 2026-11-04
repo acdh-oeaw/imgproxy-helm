@@ -2,7 +2,7 @@ apiVersion: v2
 name: acdh-imgproxy
 description: ACDH imgproxy deployment with an Nginx transformation cache
 type: application
-version: 0.3.0
+version: 0.4.0
 appVersion: "4"
 home: https://github.com/acdh-oeaw/imgproxy-helm
 icon: https://cdn.rawgit.com/imgproxy/imgproxy/master/logo.svg
@@ -16,7 +16,7 @@ annotations:
   artifacthub.io/license: MIT
   artifacthub.io/changes: |
     - kind: added
-      description: Optionally keep the Nginx cache on persistent volumes (`cache.storage.persistent`)
+      description: Key the Nginx cache on AVIF as well as WebP, to support `IMGPROXY_AUTO_AVIF`
 dependencies:
   - name: imgproxy
     version: 1.1.0
