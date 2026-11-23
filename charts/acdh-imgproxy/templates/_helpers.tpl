@@ -13,6 +13,14 @@ helm.sh/chart: {{ printf "%s-%s" .Chart.Name (.Chart.Version | replace "+" "_") 
 app.kubernetes.io/name: imgproxy-cache
 {{- end }}
 
+{{- define "acdh-imgproxy.refreshEnabled" -}}
+{{- if or .Values.cache.refresh.existingSecret .Values.cache.refresh.token }}true{{ end }}
+{{- end }}
+
+{{- define "acdh-imgproxy.refreshSecretName" -}}
+{{- default (printf "%s-refresh" (include "acdh-imgproxy.cacheName" .)) .Values.cache.refresh.existingSecret | trunc 63 | trimSuffix "-" -}}
+{{- end }}
+
 {{- define "acdh-imgproxy.originServiceName" -}}
 {{- default (printf "%s-imgproxy" .Release.Name) .Values.origin.service.name | trunc 63 | trimSuffix "-" -}}
 {{- end }}

@@ -77,6 +77,47 @@ kubectl -n imgproxy rollout status deployment/imgproxy-cache  # statefulset/imgp
 kubectl -n imgproxy get pods,service,ingress
 ```
 
+## Cache refresh
+
+The cache serves a rendered image for 30 days (`cache.config.validSuccess`), also after its source
+changed. Client cache headers, such as those sent by "Disable cache" in browser devtools, don't
+bypass the cache, because anyone could send them to force renders on the origin. The cache key also
+ignores query strings, which imgproxy ignores as well.
+
+To replace a cached response, send its url with a refresh token in the `X-Cache-Refresh` header.
+The cache then fetches the response from imgproxy and stores it. WebP and other formats are cached
+separately, so refresh both:
+
+```bash
+curl -sI -H "X-Cache-Refresh: $TOKEN" -H "Accept: image/webp" "$URL" | grep -i x-cache-status  # BYPASS
+curl -sI -H "X-Cache-Refresh: $TOKEN" "$URL" | grep -i x-cache-status                         # BYPASS
+```
+
+Without a token, which is the default, nothing can bypass the cache. To set one, create a Secret
+and reference it, or set `cache.refresh.token` to let the chart create the Secret. Tokens need 32 to
+128 characters from `A-Z a-z 0-9 _ -`:
+
+```bash
+kubectl -n imgproxy create secret generic imgproxy-cache-refresh \
+  --from-literal=token="$(openssl rand -hex 32)"
+```
+
+```yaml
+cache:
+  refresh:
+    existingSecret: imgproxy-cache-refresh
+    secretKey: token
+```
+
+An init container writes the token into the Nginx configuration when a cache pod starts, so the
+token stays out of the ConfigMap. After changing an existing Secret, restart the cache pods:
+
+```bash
+kubectl -n imgproxy rollout restart deployment/imgproxy-cache  # statefulset/imgproxy-cache with cache.storage.persistent
+```
+
+With `cache.refresh.token`, the pods restart on their own when the token changes.
+
 ## Persistent cache
 
 By default the cache lives on an `emptyDir` and starts empty after every rollout. With

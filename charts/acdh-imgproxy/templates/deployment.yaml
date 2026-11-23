@@ -38,6 +38,10 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if and .Values.cache.refresh.token (not .Values.cache.refresh.existingSecret) }}
+        {{- /* The init container reads the token at startup. Changes to an existing Secret need a restart. */}}
+        checksum/refresh: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
     spec:
       securityContext:
         {{- toYaml .Values.cache.podSecurityContext | nindent 8 }}
@@ -48,6 +52,36 @@ spec:
           labelSelector:
             matchLabels:
               {{- include "acdh-imgproxy.cacheSelectorLabels" . | nindent 14 }}
+      {{- if include "acdh-imgproxy.refreshEnabled" . }}
+      initContainers:
+        {{- /* Writes the refresh token as an entry of the `$imgproxy_cache_refresh` map, so it stays out of the ConfigMap. */}}
+        - name: cache-refresh
+          image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
+          imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              if ! printf '%s' "$TOKEN" | grep -Eqx '[A-Za-z0-9_-]{32,128}'; then
+                echo "cache.refresh: the token needs 32 to 128 characters from A-Z a-z 0-9 _ -" >&2
+                exit 1
+              fi
+              printf '"%s" 1;\n' "$TOKEN" > /etc/nginx/cache-refresh/token.conf
+          env:
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "acdh-imgproxy.refreshSecretName" . }}
+                  key: {{ .Values.cache.refresh.secretKey }}
+          securityContext:
+            {{- toYaml .Values.cache.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.cache.resources | nindent 12 }}
+          volumeMounts:
+            - name: cache-refresh
+              mountPath: /etc/nginx/cache-refresh
+      {{- end }}
       containers:
         - name: nginx
           image: "{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
@@ -93,6 +127,11 @@ spec:
               mountPath: /var/cache/nginx
             - name: tmp
               mountPath: /tmp
+            {{- if include "acdh-imgproxy.refreshEnabled" . }}
+            - name: cache-refresh
+              mountPath: /etc/nginx/cache-refresh
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:
@@ -105,6 +144,12 @@ spec:
         - name: tmp
           emptyDir:
             sizeLimit: {{ .Values.cache.storage.tmpSizeLimit }}
+        {{- if include "acdh-imgproxy.refreshEnabled" . }}
+        - name: cache-refresh
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+        {{- end }}
   {{- if $persistent }}
   volumeClaimTemplates:
     - metadata:

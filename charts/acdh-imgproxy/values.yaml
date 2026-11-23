@@ -61,6 +61,14 @@ cache:
     validSuccess: 30d
     otelEndpoint: http://localhost:4317
 
+  # Token for the `X-Cache-Refresh` request header, which skips the cache and replaces the cached response. Without a
+  # token, nothing can bypass the cache. Use either an existing Secret, or `token` to let the chart create one.
+  # Tokens need 32 to 128 characters from `A-Z a-z 0-9 _ -`, e.g. `openssl rand -hex 32`.
+  refresh:
+    existingSecret: ""
+    secretKey: token
+    token: ""
+
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 101

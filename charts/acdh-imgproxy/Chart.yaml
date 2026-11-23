@@ -2,7 +2,7 @@ apiVersion: v2
 name: acdh-imgproxy
 description: ACDH imgproxy deployment with an Nginx transformation cache
 type: application
-version: 0.3.1
+version: 0.4.0
 appVersion: "4"
 home: https://github.com/acdh-oeaw/imgproxy-helm
 icon: https://cdn.rawgit.com/imgproxy/imgproxy/master/logo.svg
@@ -16,7 +16,9 @@ annotations:
   artifacthub.io/license: MIT
   artifacthub.io/changes: |
     - kind: security
-      description: Ignore query strings in the cache key, so they cannot force new renders of signed urls
+      description: Ignore client `Pragma` headers instead of bypassing the cache
+    - kind: added
+      description: Refresh cached responses with a token in the `X-Cache-Refresh` header (`cache.refresh`)
 dependencies:
   - name: imgproxy
     version: 1.1.0
