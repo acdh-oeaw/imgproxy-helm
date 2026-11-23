@@ -35,6 +35,22 @@
             }
           }
         },
+        "refresh": {
+          "type": "object",
+          "properties": {
+            "existingSecret": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string",
+              "minLength": 1
+            },
+            "token": {
+              "type": "string",
+              "pattern": "^([A-Za-z0-9_-]{32,128})?$"
+            }
+          }
+        },
         "service": {
           "type": "object",
           "required": ["port"],
